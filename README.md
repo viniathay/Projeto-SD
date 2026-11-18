@@ -49,6 +49,9 @@ Pinagem: `safecrackpro_pins.qsf`. Testbench: `tb_safecrackpro_top.sv`.
 
 ## 3. Diagrama de estados
 
+<img width="1200" height="1600" alt="image" src="https://github.com/user-attachments/assets/8e8f937d-f410-420b-ab45-11f4625fa7c4" />
+
+
 ```mermaid
 stateDiagram-v2
     [*] --> DIGITO_0 : rstn = 0
