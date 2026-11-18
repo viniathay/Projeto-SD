@@ -1,0 +1,217 @@
+// =============================================================================
+// MODULO 1: Decodificador de 7 segmentos (display de anodo comum, 0 acende)
+// seg[6]=a ... seg[0]=g
+// =============================================================================
+module bcd_to_7segment_anodo (
+    input  logic [3:0] bcd,
+    output logic [6:0] seg
+);
+    always_comb begin
+        case (bcd)
+            4'd0: seg = 7'b0000001;
+            4'd1: seg = 7'b1001111;
+            4'd2: seg = 7'b0010010;
+            4'd3: seg = 7'b0000110;
+            4'd4: seg = 7'b1001100;
+            4'd5: seg = 7'b0100100;
+            4'd6: seg = 7'b0100000;
+            4'd7: seg = 7'b0001111;
+            4'd8: seg = 7'b0000000;
+            4'd9: seg = 7'b0000100;
+            default: seg = 7'b1111110; // hifen
+        endcase
+    end
+endmodule
+
+
+// =============================================================================
+// MODULO 2: Maquina de estados do cofre
+// =============================================================================
+module safecrackpro_fsm (
+    input  logic            clk,
+    input  logic            rstn,
+    input  logic [2:0]      btn,                    // btn[0]=KEY1, btn[1]=KEY2, btn[2]=KEY3
+    output logic [3:0][3:0] digits,                 // os 4 digitos da senha
+    output logic [1:0]      current_position_idx,   // posicao em edicao (0 a 3)
+    output logic [17:0]     led_red,
+    output logic [8:0]      led_green
+);
+
+    typedef enum logic [6:0] {
+        DIGITO_0 = 7'b0000001,
+        DIGITO_1 = 7'b0000010,
+        DIGITO_2 = 7'b0000100,
+        DIGITO_3 = 7'b0001000,
+        VERIFICA = 7'b0010000,
+        ABERTO   = 7'b0100000,
+        FALHA    = 7'b1000000
+    } state_t;
+
+    state_t state;
+
+    localparam logic [15:0] SENHA = {4'd4, 4'd3, 4'd2, 4'd1};   // senha 1-2-3-4
+    localparam int TEMPO_VERDE    = 5 * 50_000_000;             // 5 s com clock de 50MHz
+    localparam int TEMPO_VERMELHO = 3 * 50_000_000;             // 3 s com clock de 50MHz
+
+    logic [2:0] btn_antes;
+    logic       aperta_confirma, aperta_soma, aperta_subtrai;
+    logic [$clog2(TEMPO_VERDE)-1:0] led_time_cnt;
+
+    // botao ativo em baixo: aperto = estava solto (1) e agora esta apertado (0)
+    assign aperta_confirma = btn_antes[0] & ~btn[0];            // KEY1
+    assign aperta_soma     = btn_antes[1] & ~btn[1];            // KEY2
+    assign aperta_subtrai  = btn_antes[2] & ~btn[2];            // KEY3
+
+    always_ff @(posedge clk or negedge rstn) begin
+        if (~rstn) begin
+            btn_antes            <= 3'b000;
+            digits               <= 0;
+            current_position_idx <= 0;
+            led_time_cnt         <= 0;
+            state                <= DIGITO_0;
+        end
+        else begin
+            btn_antes <= btn;
+
+            case (state)
+
+                DIGITO_0: begin
+                    if (aperta_confirma) begin
+                        state                <= DIGITO_1;
+                        current_position_idx <= 1;
+                    end
+                    else if (aperta_soma) begin
+                        if (digits[0] == 9) digits[0] <= 0;
+                        else                digits[0] <= digits[0] + 1;
+                    end
+                    else if (aperta_subtrai) begin
+                        if (digits[0] == 0) digits[0] <= 9;
+                        else                digits[0] <= digits[0] - 1;
+                    end
+                end
+
+                DIGITO_1: begin
+                    if (aperta_confirma) begin
+                        state                <= DIGITO_2;
+                        current_position_idx <= 2;
+                    end
+                    else if (aperta_soma) begin
+                        if (digits[1] == 9) digits[1] <= 0;
+                        else                digits[1] <= digits[1] + 1;
+                    end
+                    else if (aperta_subtrai) begin
+                        if (digits[1] == 0) digits[1] <= 9;
+                        else                digits[1] <= digits[1] - 1;
+                    end
+                end
+
+                DIGITO_2: begin
+                    if (aperta_confirma) begin
+                        state                <= DIGITO_3;
+                        current_position_idx <= 3;
+                    end
+                    else if (aperta_soma) begin
+                        if (digits[2] == 9) digits[2] <= 0;
+                        else                digits[2] <= digits[2] + 1;
+                    end
+                    else if (aperta_subtrai) begin
+                        if (digits[2] == 0) digits[2] <= 9;
+                        else                digits[2] <= digits[2] - 1;
+                    end
+                end
+
+                DIGITO_3: begin
+                    if (aperta_confirma) begin
+                        state <= VERIFICA;
+                    end
+                    else if (aperta_soma) begin
+                        if (digits[3] == 9) digits[3] <= 0;
+                        else                digits[3] <= digits[3] + 1;
+                    end
+                    else if (aperta_subtrai) begin
+                        if (digits[3] == 0) digits[3] <= 9;
+                        else                digits[3] <= digits[3] - 1;
+                    end
+                end
+
+                VERIFICA: begin
+                    if (digits == SENHA) begin
+                        led_time_cnt <= TEMPO_VERDE - 1;
+                        state        <= ABERTO;
+                    end
+                    else begin
+                        led_time_cnt <= TEMPO_VERMELHO - 1;
+                        state        <= FALHA;
+                    end
+                end
+
+                ABERTO: begin
+                    if (led_time_cnt > 0) led_time_cnt <= led_time_cnt - 1;
+                    else begin
+                        digits               <= 0;
+                        current_position_idx <= 0;
+                        state                <= DIGITO_0;
+                    end
+                end
+
+                FALHA: begin
+                    if (led_time_cnt > 0) led_time_cnt <= led_time_cnt - 1;
+                    else begin
+                        digits               <= 0;
+                        current_position_idx <= 0;
+                        state                <= DIGITO_0;
+                    end
+                end
+
+                default: begin
+                    digits               <= 0;
+                    current_position_idx <= 0;
+                    state                <= DIGITO_0;
+                end
+
+            endcase
+        end
+    end
+
+    assign led_green = (state == ABERTO) ? 9'b111111111 : 9'b000000000;
+    assign led_red   = (state == FALHA)  ? 18'b111111111111111111 : 18'b000000000000000000;
+
+endmodule
+
+
+// =============================================================================
+// MODULO 3 (TOP): liga a FSM aos displays. Este e o modulo principal do projeto.
+// =============================================================================
+module safecrackpro_top (
+    input  logic        clk,
+    input  logic        rstn,
+    input  logic [2:0]  btn,
+    output logic [6:0]  seg_pos1,      // HEX3: 1o digito da senha
+    output logic [6:0]  seg_pos2,      // HEX2: 2o digito
+    output logic [6:0]  seg_pos3,      // HEX1: 3o digito
+    output logic [6:0]  seg_pos4,      // HEX0: 4o digito
+    output logic [6:0]  seg_cur_pos,   // HEX4: posicao atual
+    output logic [17:0] led_red,       // 18 LEDs vermelhos (senha errada)
+    output logic [8:0]  led_green      // 9 LEDs verdes (senha correta)
+);
+
+    logic [3:0][3:0] digits;
+    logic [1:0]      position;
+
+    safecrackpro_fsm fsm_inst (
+        .clk                  (clk),
+        .rstn                 (rstn),
+        .btn                  (btn),
+        .digits               (digits),
+        .current_position_idx (position),
+        .led_red              (led_red),
+        .led_green            (led_green)
+    );
+
+    bcd_to_7segment_anodo dec_pos1    (.bcd(digits[0]), .seg(seg_pos1));
+    bcd_to_7segment_anodo dec_pos2    (.bcd(digits[1]), .seg(seg_pos2));
+    bcd_to_7segment_anodo dec_pos3    (.bcd(digits[2]), .seg(seg_pos3));
+    bcd_to_7segment_anodo dec_pos4    (.bcd(digits[3]), .seg(seg_pos4));
+    bcd_to_7segment_anodo dec_cur_pos (.bcd({2'b00, position} + 4'd1), .seg(seg_cur_pos));
+
+endmodule
