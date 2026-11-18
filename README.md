@@ -48,7 +48,7 @@ Pinagem: `safecrackpro_pins.qsf`. Testbench: `tb_safecrackpro_top.sv`.
 | Codificacao one-hot dos estados | `typedef enum logic [6:0]` com um bit por estado | `state_t` |
 
 ## 3. Diagrama de estados
-
+## Protótipo inicial da maquina de estados.
 <img width="1200" height="1600" alt="image" src="https://github.com/user-attachments/assets/8e8f937d-f410-420b-ab45-11f4625fa7c4" />
 
 
