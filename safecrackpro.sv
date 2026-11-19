@@ -117,12 +117,12 @@ module safecrackpro_fsm (
                     end
                 end
 
-                DIGITO_3: begin
+                DIGITO_3: begin 
                     if (aperta_confirma) begin
-                        state <= VERIFICA;
+                        state <= VERIFICA; // ultimo digito: não avança posição, vai conferir a senha
                     end
                     else if (aperta_soma) begin
-                        if (digits[3] == 9) digits[3] <= 0;
+                        if (digits[3] == 9) digits[3] <= 0; // soma com volta: 9 vira 0
                         else                digits[3] <= digits[3] + 1;
                     end
                     else if (aperta_subtrai) begin
@@ -131,12 +131,12 @@ module safecrackpro_fsm (
                     end
                 end
 
-                VERIFICA: begin
-                    if (digits == SENHA) begin
-                        led_time_cnt <= TEMPO_VERDE - 1;
+                VERIFICA: begin // dura só um ciclo: compara e escolhe o proximo estado
+                    if (digits == SENHA) begin // senha digitada igual a senha correta
+                        led_time_cnt <= TEMPO_VERDE - 1; // carrega 5s (-1 porque conta até 0)
                         state        <= ABERTO;
                     end
-                    else begin
+                    else begin // senha errada
                         led_time_cnt <= TEMPO_VERMELHO - 1;
                         state        <= FALHA;
                     end
