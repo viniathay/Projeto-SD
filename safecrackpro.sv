@@ -53,7 +53,7 @@ module safecrackpro_fsm (
     logic       aperta_confirma, aperta_soma, aperta_subtrai;   // ficam em 1 so no ciclo em que o botao e apertado
     logic [$clog2(TEMPO_VERDE)-1:0] led_time_cnt;               // contador do tempo dos LEDs
 
-    // botao ativo em baixo: aperto = estava solto (1) e agora esta apertado (0)
+    
     assign aperta_confirma = btn_antes[0] & ~btn[0];            // KEY1: confirma o digito e passa pro proximo
     assign aperta_soma     = btn_antes[1] & ~btn[1];            // KEY2: soma 1 no digito
     assign aperta_subtrai  = btn_antes[2] & ~btn[2];            // KEY3: subtrai 1 do digito
