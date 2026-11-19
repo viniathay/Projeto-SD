@@ -49,7 +49,8 @@ Pinagem: `safecrackpro_pins.qsf`. Testbench: `tb_safecrackpro_top.sv`.
 
 ## 3. Diagrama de estados
 ## Protótipo inicial da maquina de estados.
-<img width="1200" height="1600" alt="image" src="https://github.com/user-attachments/assets/8e8f937d-f410-420b-ab45-11f4625fa7c4" />
+<img width="1600" height="1200" alt="1000136440" src="https://github.com/user-attachments/assets/751da411-45d6-4657-8375-adcee95b55d3" />
+
 
 ## Maquina de estados final
 ```mermaid
