@@ -45,18 +45,18 @@ module safecrackpro_fsm (
 
     state_t state; // guarda o estado atual do cofre
 
-    localparam logic [15:0] SENHA = {4'd4, 4'd3, 4'd2, 4'd1};   // senha 1-2-3-4
+    localparam logic [15:0] SENHA = {4'd4, 4'd3, 4'd2, 4'd1};   // senha certa (1-2-3-4), cada digito com 4 bits
     localparam int TEMPO_VERDE    = 5 * 50_000_000;             // 5 s com clock de 50MHz
     localparam int TEMPO_VERMELHO = 3 * 50_000_000;             // 3 s com clock de 50MHz
 
-    logic [2:0] btn_antes;
-    logic       aperta_confirma, aperta_soma, aperta_subtrai;
-    logic [$clog2(TEMPO_VERDE)-1:0] led_time_cnt;
+    logic [2:0] btn_antes;                                      // guarda como os botoes estavam no ciclo anterior
+    logic       aperta_confirma, aperta_soma, aperta_subtrai;   // ficam em 1 so no ciclo em que o botao e apertado
+    logic [$clog2(TEMPO_VERDE)-1:0] led_time_cnt;               // contador do tempo dos LEDs
 
     // botao ativo em baixo: aperto = estava solto (1) e agora esta apertado (0)
-    assign aperta_confirma = btn_antes[0] & ~btn[0];            // KEY1
-    assign aperta_soma     = btn_antes[1] & ~btn[1];            // KEY2
-    assign aperta_subtrai  = btn_antes[2] & ~btn[2];            // KEY3
+    assign aperta_confirma = btn_antes[0] & ~btn[0];            // KEY1: confirma o digito e passa pro proximo
+    assign aperta_soma     = btn_antes[1] & ~btn[1];            // KEY2: soma 1 no digito
+    assign aperta_subtrai  = btn_antes[2] & ~btn[2];            // KEY3: subtrai 1 do digito
 
     always_ff @(posedge clk or negedge rstn) begin // roda a cada clock, com o reset agindo na hora
         if (~rstn) begin // reset apertado (ativo em baixo): volta tudo pro inicio
