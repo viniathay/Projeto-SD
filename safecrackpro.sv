@@ -1,7 +1,7 @@
-// =============================================================================
+
 // MODULO 1: Decodificador de 7 segmentos (display de anodo comum, 0 acende)
 // seg[6]=a ... seg[0]=g
-// =============================================================================
+
 module bcd_to_7segment_anodo (
     input  logic [3:0] bcd,
     output logic [6:0] seg
@@ -23,31 +23,28 @@ module bcd_to_7segment_anodo (
     end
 endmodule
 
-
-// =============================================================================
 // MODULO 2: Maquina de estados do cofre
-// =============================================================================
 module safecrackpro_fsm (
-    input  logic            clk,
-    input  logic            rstn,
-    input  logic [2:0]      btn,                    // btn[0]=KEY1, btn[1]=KEY2, btn[2]=KEY3
-    output logic [3:0][3:0] digits,                 // os 4 digitos da senha
-    output logic [1:0]      current_position_idx,   // posicao em edicao (0 a 3)
-    output logic [17:0]     led_red,
-    output logic [8:0]      led_green
+    input  logic            clk, // define o clock como 50
+    input  logic            rstn, // define o reset
+    input  logic [2:0]      btn, //define os botoes que serao usados da placa: btn[0]=KEY1, btn[1]=KEY2, btn[2]=KEY3
+    output logic [3:0][3:0] digits, // os 4 digitos da senha
+    output logic [1:0]      current_position_idx,  // indica qual digita esta edicao (1 a 4)
+    output logic [17:0]     led_red, // leds vermelhos usados
+    output logic [8:0]      led_green // leds verdes usados
 );
 
     typedef enum logic [6:0] {
-        DIGITO_0 = 7'b0000001,
-        DIGITO_1 = 7'b0000010,
-        DIGITO_2 = 7'b0000100,
-        DIGITO_3 = 7'b0001000,
-        VERIFICA = 7'b0010000,
-        ABERTO   = 7'b0100000,
-        FALHA    = 7'b1000000
+        DIGITO_0 = 7'b0000001, // edita o primeiro numero
+        DIGITO_1 = 7'b0000010, // edita o segundo numero
+        DIGITO_2 = 7'b0000100, // edita o terceiro numero
+        DIGITO_3 = 7'b0001000, // edita o ultimo digito
+        VERIFICA = 7'b0010000, // compara a senha certa com a senha inserida
+        ABERTO   = 7'b0100000, // senha correta, acende os leds verdes
+        FALHA    = 7'b1000000 // senha errada, acende os leds vermelhos
     } state_t;
 
-    state_t state;
+    state_t state; // guarda o estado atual do cofre
 
     localparam logic [15:0] SENHA = {4'd4, 4'd3, 4'd2, 4'd1};   // senha 1-2-3-4
     localparam int TEMPO_VERDE    = 5 * 50_000_000;             // 5 s com clock de 50MHz
@@ -179,9 +176,9 @@ module safecrackpro_fsm (
 endmodule
 
 
-// =============================================================================
+
 // MODULO 3 (TOP): liga a FSM aos displays. Este e o modulo principal do projeto.
-// =============================================================================
+
 module safecrackpro_top (
     input  logic        clk,
     input  logic        rstn,
