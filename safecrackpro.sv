@@ -1,4 +1,3 @@
-
 // MODULO 1: Decodificador de 7 segmentos (display de anodo comum, 0 acende)
 // seg[6]=a ... seg[0]=g
 
@@ -59,35 +58,35 @@ module safecrackpro_fsm (
     assign aperta_soma     = btn_antes[1] & ~btn[1];            // KEY2
     assign aperta_subtrai  = btn_antes[2] & ~btn[2];            // KEY3
 
-    always_ff @(posedge clk or negedge rstn) begin
-        if (~rstn) begin
-            btn_antes            <= 3'b000;
-            digits               <= 0;
-            current_position_idx <= 0;
-            led_time_cnt         <= 0;
-            state                <= DIGITO_0;
+    always_ff @(posedge clk or negedge rstn) begin // roda a cada clock, com o reset agindo na hora
+        if (~rstn) begin // reset apertado (ativo em baixo): volta tudo pro inicio
+            btn_antes            <= 3'b000; // limpa os botoes
+            digits               <= 0; // zera a senha digitada
+            current_position_idx <= 0; // volta pro primeiro digito
+            led_time_cnt         <= 0; // zera o contador de tempo dos leds
+            state                <= DIGITO_0; // comeca editando o primeiro digito
         end
-        else begin
-            btn_antes <= btn;
+        else begin // reset solto: funcionamento normal
+            btn_antes <= btn; // guarda os botoes para detectar o aperto no proximo
 
-            case (state)
+            case (state) // escolhe o que fazer de acordo com o estado atual
 
-                DIGITO_0: begin
-                    if (aperta_confirma) begin
-                        state                <= DIGITO_1;
-                        current_position_idx <= 1;
+                DIGITO_0: begin // edicao do primeiro digito
+                    if (aperta_confirma) begin // KEY1: confirma
+                        state                <= DIGITO_1; // passa para o segundo digito
+                        current_position_idx <= 1; // atualiza a posicao mostrada no display
                     end
-                    else if (aperta_soma) begin
-                        if (digits[0] == 9) digits[0] <= 0;
-                        else                digits[0] <= digits[0] + 1;
+                    else if (aperta_soma) begin // KEY2: aumenta o digito em 1
+                        if (digits[0] == 9) digits[0] <= 0; // 9 vira 0
+                        else                digits[0] <= digits[0] + 1; // senao, soma 1
                     end
-                    else if (aperta_subtrai) begin
-                        if (digits[0] == 0) digits[0] <= 9;
-                        else                digits[0] <= digits[0] - 1;
+                    else if (aperta_subtrai) begin // KEY3: diminui o digito 1
+                        if (digits[0] == 0) digits[0] <= 9; // 0 vira 9
+                        else                digits[0] <= digits[0] - 1; // senao, subtrai 1
                     end
                 end
 
-                DIGITO_1: begin
+                DIGITO_1: begin // segundo digito: mesma logica do DIGITO_0
                     if (aperta_confirma) begin
                         state                <= DIGITO_2;
                         current_position_idx <= 2;
@@ -102,7 +101,7 @@ module safecrackpro_fsm (
                     end
                 end
 
-                DIGITO_2: begin
+                DIGITO_2: begin // terceiro digito: mesma logica do DIGITO_0
                     if (aperta_confirma) begin
                         state                <= DIGITO_3;
                         current_position_idx <= 3;
