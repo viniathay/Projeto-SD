@@ -80,7 +80,7 @@ module safecrackpro_fsm (
                         if (digits[0] == 9) digits[0] <= 0; // 9 vira 0
                         else                digits[0] <= digits[0] + 1; // senao, soma 1
                     end
-                    else if (aperta_subtrai) begin // KEY3: diminui o digito 1
+                    else if (aperta_subtrai) begin // KEY3: diminui o digito em 1
                         if (digits[0] == 0) digits[0] <= 9; // 0 vira 9
                         else                digits[0] <= digits[0] - 1; // senao, subtrai 1
                     end
