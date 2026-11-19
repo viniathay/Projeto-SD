@@ -142,8 +142,17 @@ module safecrackpro_fsm (
                     end
                 end
 
-                ABERTO: begin
-                    if (led_time_cnt > 0) led_time_cnt <= led_time_cnt - 1;
+                ABERTO: begin  // senha certa: leds verdes acesos por 5s
+                    if (led_time_cnt > 0) led_time_cnt <= led_time_cnt - 1; // conta pra tras 1 por clock
+                    else begin // acabou o tempo: volta pro inicio
+                        digits               <= 0;
+                        current_position_idx <= 0;
+                        state                <= DIGITO_0;
+                    end
+                end
+
+                FALHA: begin // senha errada: leds vermelhos acesos por 3s
+                    if (led_time_cnt > 0) led_time_cnt <= led_time_cnt - 1; // mesma contagem, só que de 3s
                     else begin
                         digits               <= 0;
                         current_position_idx <= 0;
@@ -151,16 +160,7 @@ module safecrackpro_fsm (
                     end
                 end
 
-                FALHA: begin
-                    if (led_time_cnt > 0) led_time_cnt <= led_time_cnt - 1;
-                    else begin
-                        digits               <= 0;
-                        current_position_idx <= 0;
-                        state                <= DIGITO_0;
-                    end
-                end
-
-                default: begin
+                default: begin // se cair em estado inválido, volta pro inicio
                     digits               <= 0;
                     current_position_idx <= 0;
                     state                <= DIGITO_0;
@@ -170,7 +170,8 @@ module safecrackpro_fsm (
         end
     end
 
-    assign led_green = (state == ABERTO) ? 9'b111111111 : 9'b000000000;
+    // saída dos LEDs:lógica combinacional que depende só do estado atual. Verde = ABERTO , vermelho = FALHA
+    assign led_green = (state == ABERTO) ? 9'b111111111 : 9'b000000000; 
     assign led_red   = (state == FALHA)  ? 18'b111111111111111111 : 18'b000000000000000000;
 
 endmodule
