@@ -116,6 +116,7 @@ module safecrackpro_fsm (
                     end
                 end
 
+                
                 DIGITO_3: begin 
                     if (aperta_confirma) begin
                         state <= VERIFICA; // ultimo digito: não avança posição, vai conferir a senha
